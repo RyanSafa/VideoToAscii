@@ -46,3 +46,6 @@ _deps
 build
 *.sh
 *.cache
+*.vscode
+*.dSYM
+*.DS_Store
