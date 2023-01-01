@@ -32,18 +32,17 @@ int main(int argc, char *argv[]) {
         start = steady_clock::now();
       }
 
-      double pt_double =
-          pts * (double)vr_state.time_base.num / (double)vr_state.time_base.den;
+      double expected_frame_time = pts * (double)vr_state.time_base.num /
+                                   (double)vr_state.time_base.den * 1000;
       while (
-          pt_double * 1000000 >
-          (duration_cast<microseconds>(steady_clock::now() - start)).count()) {
-        // do noting
+          expected_frame_time >
+          (duration_cast<milliseconds>(steady_clock::now() - start)).count()) {
       }
       // std::cout << "frame number: " << num_frames << " | ";
-      // printf("pt_double: %f (micro) | ", pt_double * 1000000);
+      // printf("Expected frame time: %f (ms) | ", expected_frame_time);
       // std::cout
-      //     << "micro since first frame: "
-      //     << (duration_cast<microseconds>(steady_clock::now() -
+      //     << "ms since first frame (real): "
+      //     << (duration_cast<milliseconds>(steady_clock::now() -
       //     start)).count()
       //     << "\n";
     }
@@ -51,8 +50,8 @@ int main(int argc, char *argv[]) {
     auto time_after_24_frames = steady_clock::now();
     std::cout
         << "Time difference =  "
-        << duration_cast<microseconds>(time_after_24_frames - start).count()
-        << "micro\n";
+        << duration_cast<milliseconds>(time_after_24_frames - start).count()
+        << "ms\n";
   } else if (argc < 2) {
     std::cout << "No file was entered\n";
   } else {

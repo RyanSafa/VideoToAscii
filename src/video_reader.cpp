@@ -5,8 +5,8 @@
 #include <sys/_types/_int64_t.h>
 
 int *get_new_dimension(int width, int height) {
-  int MAX_HEIGHT = 160;
-  int MAX_WIDTH = 200;
+  int MAX_HEIGHT = 40;
+  int MAX_WIDTH = 80;
 
   if (height > MAX_HEIGHT) {
     int reduced_width = floor((width * MAX_HEIGHT) / height);

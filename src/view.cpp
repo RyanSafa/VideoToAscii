@@ -8,7 +8,6 @@ void print_to_console(uint8_t *rgb_data, int width, int height) {
   std::string light_to_dark =
       "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/|()1{}[]?-_+~<>i!lI;:,\"^`'. ";
   int ramp_length = light_to_dark.length();
-  std::string row = "";
   for (int j = 0; j < height; j++) {
     std::string row = "";
     for (int i = 0; i < width; i++) {
