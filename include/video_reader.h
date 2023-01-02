@@ -10,6 +10,7 @@ struct VideoReaderState {
   int width, height;
   int *scaled_dimensions;
   AVRational time_base;
+  int num_frames;
 
   AVFormatContext *av_format_context;
   AVCodecContext *av_codec_ctx;
@@ -27,3 +28,5 @@ bool video_reader_read_frame(VideoReaderState *state, uint8_t *frame_buffer,
 bool video_reader_close(VideoReaderState *state);
 
 int *get_new_dimension(int width, int height);
+
+bool seek_to_beginning(VideoReaderState *state);

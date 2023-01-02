@@ -1,5 +1,6 @@
 #include "../include/video_reader.h"
 #include <_types/_uint8_t.h>
+#include <arm/signal.h>
 #include <chrono>
 #include <iostream>
 #include <ratio>
@@ -15,43 +16,35 @@ int main(int argc, char *argv[]) {
     }
     uint8_t *frame_data = new uint8_t[vr_state.scaled_dimensions[0] *
                                       vr_state.scaled_dimensions[1] * 4];
-    static bool first_frame = true;
-    int num_frames = 0;
+    long frames_since_start = 0;
     int64_t pts;
-
     steady_clock::time_point start;
-    while (true) {
-      if (!video_reader_read_frame(&vr_state, frame_data, &pts)) {
-        printf("Couldn't load the video frame");
-        video_reader_close(&vr_state);
-        return 1;
-      }
-      num_frames++;
-      if (first_frame) {
-        first_frame = false;
-        start = steady_clock::now();
-      }
+    bool first_frame = true;
 
-      double expected_frame_time = pts * (double)vr_state.time_base.num /
-                                   (double)vr_state.time_base.den * 1000;
-      while (
-          expected_frame_time >
-          (duration_cast<milliseconds>(steady_clock::now() - start)).count()) {
+    do {
+      while (1) {
+        if (!video_reader_read_frame(&vr_state, frame_data, &pts)) {
+          break;
+        }
+        frames_since_start++;
+        if ((frames_since_start - 1) % vr_state.num_frames == 0) {
+          start = steady_clock::now();
+        }
+        double expected_frame_time = pts * (double)vr_state.time_base.num /
+                                     (double)vr_state.time_base.den * 1000;
+        while (expected_frame_time >
+               (duration_cast<milliseconds>(steady_clock::now() - start))
+                   .count()) {
+        }
+        std::cout << "frame number: " << frames_since_start << " | ";
+        printf("Expected frame time: %f (ms) | ", expected_frame_time);
+        std::cout << "ms since first frame (real): "
+                  << (duration_cast<milliseconds>(steady_clock::now() - start))
+                         .count()
+                  << "\n";
       }
-      // std::cout << "frame number: " << num_frames << " | ";
-      // printf("Expected frame time: %f (ms) | ", expected_frame_time);
-      // std::cout
-      //     << "ms since first frame (real): "
-      //     << (duration_cast<milliseconds>(steady_clock::now() -
-      //     start)).count()
-      //     << "\n";
-    }
-    video_reader_close(&vr_state);
-    auto time_after_24_frames = steady_clock::now();
-    std::cout
-        << "Time difference =  "
-        << duration_cast<milliseconds>(time_after_24_frames - start).count()
-        << "ms\n";
+    } while (seek_to_beginning(&vr_state));
+
   } else if (argc < 2) {
     std::cout << "No file was entered\n";
   } else {
