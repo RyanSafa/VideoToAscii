@@ -176,8 +176,7 @@ bool video_reader_read_frame(VideoReaderState *state, uint8_t *frame_buffer,
     sws_scale(sws_scalar_ctx, av_frame->data, av_frame->linesize, 0, height,
               dest, dest_linesize);
 
-    // print_to_console(frame_buffer, scaled_dimensions[0],
-    // scaled_dimensions[1]);
+    print_to_console(frame_buffer, scaled_dimensions[0], scaled_dimensions[1]);
   }
   return true;
 }
