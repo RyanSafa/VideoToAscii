@@ -1,13 +1,15 @@
 #include "../include/video_reader.h"
+#include "ncurses.h"
 #include <_types/_uint8_t.h>
-#include <arm/signal.h>
 #include <chrono>
 #include <iostream>
-#include <ratio>
 using namespace std::chrono;
 
 int main(int argc, char *argv[]) {
+  initscr();
+  curs_set(0);
   if (argc == 2) {
+    bool continue_render = true;
     VideoReaderState vr_state;
     vr_state.sws_scalar_ctx = NULL;
     if (!video_reader_open(&vr_state, argv[1])) {
@@ -21,11 +23,28 @@ int main(int argc, char *argv[]) {
     steady_clock::time_point start;
     bool first_frame = true;
 
+    int inity, initx;
+    getmaxyx(stdscr, inity, initx);
+    WINDOW *win = newwin(
+        vr_state.scaled_dimensions[1] + 1, vr_state.scaled_dimensions[0] + 1, 0,
+        round((initx / 2.0f) - (vr_state.scaled_dimensions[0] / 2.0f)));
+    cbreak();
+    noecho();
+    scrollok(win, TRUE);
+    nodelay(win, TRUE);
+    refresh();
+
     do {
       while (1) {
-        if (!video_reader_read_frame(&vr_state, frame_data, &pts)) {
+        if (!video_reader_read_frame(&vr_state, frame_data, &pts, win)) {
           break;
         }
+
+        if (wgetch(win) == 'q') {
+          continue_render = false;
+          break;
+        }
+
         frames_since_start++;
         if ((frames_since_start - 1) % vr_state.num_frames == 0) {
           start = steady_clock::now();
@@ -36,19 +55,17 @@ int main(int argc, char *argv[]) {
                (duration_cast<milliseconds>(steady_clock::now() - start))
                    .count()) {
         }
-        std::cout << "frame number: " << frames_since_start << " | ";
-        printf("Expected frame time: %f (ms) | ", expected_frame_time);
-        std::cout << "ms since first frame (real): "
-                  << (duration_cast<milliseconds>(steady_clock::now() - start))
-                         .count()
-                  << "\n";
       }
-    } while (seek_to_beginning(&vr_state));
+    } while (seek_to_beginning(&vr_state) && continue_render);
 
+    video_reader_close(&vr_state);
+    wrefresh(win);
   } else if (argc < 2) {
-    std::cout << "No file was entered\n";
+    move(0, 0);
+    printw("No file was entered\n");
   } else {
-    std::cout << "More than one file was entered\n";
+    move(0, 0);
+    printw("MOre than one file was entered\n");
   }
   return 0;
 };

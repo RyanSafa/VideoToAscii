@@ -1,4 +1,5 @@
 #pragma once
+#include "ncurses.h"
 extern "C" {
 #include "inttypes.h"
 #include "libavcodec/avcodec.h"
@@ -23,7 +24,7 @@ struct VideoReaderState {
 bool video_reader_open(VideoReaderState *state, const char *filename);
 
 bool video_reader_read_frame(VideoReaderState *state, uint8_t *frame_buffer,
-                             int64_t *pts);
+                             int64_t *pts, WINDOW *win);
 
 bool video_reader_close(VideoReaderState *state);
 

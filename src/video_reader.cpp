@@ -1,5 +1,6 @@
 #include "../include/video_reader.h"
 #include "../include/view.h"
+#include "ncurses.h"
 #include <cinttypes>
 #include <iostream>
 #include <libavformat/avformat.h>
@@ -8,23 +9,25 @@
 #include <libswscale/swscale.h>
 #include <sys/_types/_int64_t.h>
 
+#include <stdio.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+
 int *get_new_dimension(int width, int height) {
-  int MAX_HEIGHT = 60;
-  int MAX_WIDTH = 80;
 
-  if (height > MAX_HEIGHT) {
-    int reduced_width = floor((width * MAX_HEIGHT) / height);
-    int static tuple[] = {reduced_width, MAX_HEIGHT};
-    return tuple;
-  }
-  if (width > MAX_WIDTH) {
-    int reduced_height = floor((width * MAX_WIDTH) / width);
-    int static tuple[] = {MAX_WIDTH, reduced_height};
-    return tuple;
-  }
+  // only works on unix systems
+  struct winsize w;
+  ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+  double terminal_rows = w.ws_row;
+  double terminal_cols = w.ws_col;
 
-  int static tuple[] = {width, height};
-  return tuple;
+  double reduction_factor = terminal_rows / height * 100;
+
+  int reduced_width = floor(width * reduction_factor / 100);
+  int reduced_height = floor(height * reduction_factor / 100);
+
+  static int dimension_tuple[] = {reduced_width, reduced_height};
+  return dimension_tuple;
 }
 
 bool video_reader_open(VideoReaderState *state, const char *filename) {
@@ -108,7 +111,7 @@ bool video_reader_open(VideoReaderState *state, const char *filename) {
 }
 
 bool video_reader_read_frame(VideoReaderState *state, uint8_t *frame_buffer,
-                             int64_t *pts) {
+                             int64_t *pts, WINDOW *win) {
   // unpack
   auto &av_format_context = state->av_format_context;
   auto &av_codec_ctx = state->av_codec_ctx;
@@ -176,7 +179,8 @@ bool video_reader_read_frame(VideoReaderState *state, uint8_t *frame_buffer,
     sws_scale(sws_scalar_ctx, av_frame->data, av_frame->linesize, 0, height,
               dest, dest_linesize);
 
-    print_to_console(frame_buffer, scaled_dimensions[0], scaled_dimensions[1]);
+    print_to_console(frame_buffer, scaled_dimensions[0], scaled_dimensions[1],
+                     win);
   }
   return true;
 }
