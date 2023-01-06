@@ -6,20 +6,20 @@
 #include <atomic>
 #include <chrono>
 #include <iostream>
+#include <unistd.h>
 using namespace std::chrono;
 
 int main(int argc, char *argv[]) {
-
+  initscr();
   if (argc == 2) {
-    initscr();
     int initY, initX;
     getmaxyx(stdscr, initY, initX);
     VideoReader *videoReader;
     try {
       videoReader = new VideoReader(argv[1], initY);
     } catch (const char *failureMessage) {
-      printw(failureMessage);
-      refresh();
+      endwin();
+      std::cout << failureMessage;
       return 1;
     }
 
@@ -74,6 +74,10 @@ int main(int argc, char *argv[]) {
 
     delete videoReader;
     endwin();
-    return 0;
+  } else {
+    endwin();
+    std::cout << "Please enter a full path to a video file\n";
+    return 1;
   }
+  return 0;
 }
