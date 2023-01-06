@@ -4,6 +4,7 @@
 #include <cmath>
 #include <iostream>
 #include <string>
+
 void print_to_console(uint8_t *rgb_data, int width, int height, WINDOW *win) {
 
   std::string dark_to_light = " .,:ilwW";
